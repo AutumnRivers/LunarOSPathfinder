@@ -12,6 +12,13 @@ using Pathfinder.Util;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.IO;
+
+using LunarOSPathfinder.Properties;
+using System.Windows.Media.Imaging;
+
+using Hacknet.Extensions;
+using Pathfinder.Replacements;
 
 namespace LunarOSPathfinder.Daemons
 {
@@ -31,22 +38,41 @@ namespace LunarOSPathfinder.Daemons
         public string TitleXOffset = "-100";
 
         [XMLStorage]
-        public string TitleYOffset = "-10";
+        public string TitleYOffset = "-60";
 
         [XMLStorage]
         public string SubXOffset = "-125";
 
         [XMLStorage]
-        public string SubYOffset = "25";
+        public string SubYOffset = "-25";
 
         [XMLStorage]
         public string ButtonText = "Debug Menu";
 
+        static Texture2D logo;
+
+        public static void LoadLogo()
+        {
+            ExtensionInfo extinfo = ExtensionLoader.ActiveExtensionInfo;
+            string extensionFolder = extinfo.FolderPath;
+            string hacknetFolder = "./";
+
+            string fullExtensionPath = hacknetFolder + extensionFolder;
+
+            // Logo stuff
+            FileStream logoStream = File.OpenRead(fullExtensionPath + "/Images/LunarOSLogo.png");
+            logo = Texture2D.FromStream(GuiData.spriteBatch.GraphicsDevice, logoStream);
+            logoStream.Dispose();
+        }
+
+        public static void DestroyLogo()
+        {
+            logo.Dispose();
+        }
+
         public override void draw(Rectangle bounds, SpriteBatch sb)
         {
             base.draw(bounds, sb);
-
-            // TODO: Add LunarOS graphic to background. Doesn't have to be super fancy
 
             // Parse strings as int
             int titleXOffset = int.Parse(TitleXOffset);
@@ -55,13 +81,29 @@ namespace LunarOSPathfinder.Daemons
             int subYOffset = int.Parse(SubYOffset);
 
             var center = os.display.bounds.Center; // Get center of daemon display
+
+            Rectangle logoRect = new Rectangle();
+            logoRect.X = center.X - 250;
+            logoRect.Y = center.Y - 150;
+            logoRect.Width = 325;
+            logoRect.Height = 325;
+
+            GuiData.spriteBatch.Draw(logo, logoRect, Color.White * 0.3f); // Draw Logo
+
+            GuiData.spriteBatch.DrawString(GuiData.smallfont, "This machine protected with Moonshine(TM) Technologies Software.\nhttps://moonshine.tech/lunardefender", new Vector2(bounds.X + 175, bounds.Y + 38), Color.CornflowerBlue);
+
             TextItem.doLabel(new Vector2(center.X + titleXOffset, center.Y + titleYOffset), "LunarOS v" + Version, Color.Aquamarine); // Draw LunarOS version
 
             if(Subtitle != null) { TextItem.doLabel(new Vector2(center.X + subXOffset, center.Y + subYOffset), Subtitle, Color.White); } // Draw (optional) subtitle
 
-            var backButton = Button.doButton(123, os.display.bounds.X + 30, os.display.bounds.Y + 30, 125, 50, ButtonText, Color.CornflowerBlue); // Exit daemon button
+            bool backButton = false;
 
-            if(backButton) { os.display.command = "connect"; }
+            if (comp.PlayerHasAdminPermissions())
+            {
+                backButton = Button.doButton(123, os.display.bounds.X + 30, os.display.bounds.Y + 30, 125, 50, ButtonText, Color.CornflowerBlue); // Exit daemon button 
+            }
+
+            if (backButton) { os.display.command = "connect"; }
         }
     }
 }

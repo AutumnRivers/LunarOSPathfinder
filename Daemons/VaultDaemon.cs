@@ -36,6 +36,11 @@ namespace LunarOSPathfinder.Daemons
         [XMLStorage]
         public string MaximumKeys = "5";
 
+        public override void initFiles()
+        {
+            if(comp.portsNeededForCrack <= 0) { comp.portsNeededForCrack = 123321; }
+        }
+
         public override void draw(Rectangle bounds, SpriteBatch sb)
         {
             // Set the admin password to the secret code
@@ -84,7 +89,11 @@ namespace LunarOSPathfinder.Daemons
                 }
             }
 
-            if(grantedButton) { OS.currentInstance.runCommand("login"); }; // Send the user to the login screen for the ACCESS GRANTED button
+            if (grantedButton)
+            {
+                comp.giveAdmin(os.thisComputer.ip);
+                OS.currentInstance.runCommand("ls");
+            }; // Give the player admin when they hit the button
 
             if(deniedButton) { // Warn the user they still need all the keys
                 os.warningFlash();

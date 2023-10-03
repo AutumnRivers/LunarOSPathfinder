@@ -40,6 +40,10 @@ namespace LunarOSPathfinder
                 }
             }
 
+            Log.LogDebug("[LunarOSv3] Preloading Static Images...");
+            LunarOSDaemon.LoadLogo();
+            Log.LogDebug("[LunarOSv3] LunarOSDaemon - LunarOSLogo Preloaded!");
+
             Console.WriteLine("[LunarOSv3] Registering Ports");
             PortManager.RegisterPort("moonshine", "Moonshine Services", 3653); // Moonshine Services for LunarOS
             PortManager.RegisterPort("lunardefender", "LunarDefender", 7600); // LunarDefender
@@ -50,6 +54,14 @@ namespace LunarOSPathfinder
 
             return true;
 
+        }
+
+        public override bool Unload()
+        {
+            Console.WriteLine("[LunarOSv3] Cleaning things up...");
+            LunarOSDaemon.DestroyLogo();
+
+            return true;
         }
     }
 }
