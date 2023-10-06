@@ -49,26 +49,7 @@ namespace LunarOSPathfinder.Daemons
         [XMLStorage]
         public string ButtonText = "Debug Menu";
 
-        static Texture2D logo;
-
-        public static void LoadLogo()
-        {
-            ExtensionInfo extinfo = ExtensionLoader.ActiveExtensionInfo;
-            string extensionFolder = extinfo.FolderPath;
-            string hacknetFolder = "./";
-
-            string fullExtensionPath = hacknetFolder + extensionFolder;
-
-            // Logo stuff
-            FileStream logoStream = File.OpenRead(fullExtensionPath + "/Images/LunarOSLogo.png");
-            logo = Texture2D.FromStream(GuiData.spriteBatch.GraphicsDevice, logoStream);
-            logoStream.Dispose();
-        }
-
-        public static void DestroyLogo()
-        {
-            logo.Dispose();
-        }
+        public static Texture2D logo;
 
         public override void draw(Rectangle bounds, SpriteBatch sb)
         {
