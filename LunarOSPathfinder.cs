@@ -19,9 +19,14 @@ using BepInEx.Hacknet;
 using HarmonyLib;
 
 using LunarOSPathfinder.Daemons;
+using LunarOSPathfinder.Executables;
+
 using Hacknet.Extensions;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
+using Pathfinder.Util;
+using Pathfinder.Event;
+using Pathfinder.Event.Loading;
 
 namespace LunarOSPathfinder
 {
@@ -59,32 +64,63 @@ namespace LunarOSPathfinder
             lunarOSLogo = Texture2D.FromStream(GuiData.spriteBatch.GraphicsDevice, logoStream);
             logoStream.Dispose();
 
+            // Images
             Log.LogDebug("[LunarOSv3] Preloading Static Images...");
             LunarOSDaemon.logo = lunarOSLogo;
+            LunarDefender.logo = lunarOSLogo;
             Log.LogDebug("[LunarOSv3] LunarOSDaemon - LunarOSLogo Preloaded!");
 
+            // Ports
             Console.WriteLine("[LunarOSv3] Registering Ports");
             PortManager.RegisterPort("moonshine", "Moonshine Services", 3653); // Moonshine Services for LunarOS
             PortManager.RegisterPort("lunardefender", "LunarDefender", 7600); // LunarDefender
 
+            // Daemons
             Console.WriteLine("[LunarOSv3] Registering Daemons");
             DaemonManager.RegisterDaemon<LunarOSDaemon>(); // LunarOS
             DaemonManager.RegisterDaemon<VaultDaemon>(); // Vaults
 
+            // Actions
             Console.WriteLine("[LunarOSv3] Registering Actions");
             ActionManager.RegisterAction<CheckForDebug>("DebugCheck");
+            ActionManager.RegisterAction<Actions.LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender");
+            ActionManager.RegisterAction<Actions.LunarDefenderActions.KillLunarDefender>("KillLunarDefender");
+
+            // Executables
+            Console.WriteLine("[LunarOSv3] Registering Executables");
+            ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER#");
+
+            // Launch LunarDefender when extension is loaded
+            Action<OSLoadedEvent> lunarDefenderDelegate = CheckForDefender;
+
+            EventManager<OSLoadedEvent>.AddHandler(lunarDefenderDelegate);
 
             return true;
+        }
 
+        public void CheckForDefender(OSLoadedEvent os_load_event)
+        {
+            OS os = os_load_event.Os;
+            LunarDefender ldExe = new LunarDefender();
+
+            if (os.Flags.HasFlag("KeepLDActive") && !os.exes.Contains(ldExe))
+            {
+                os.AddGameExecutable(ldExe);
+            }
         }
     }
 
     public class CheckForDebug : PathfinderAction
     {
+        [XMLStorage]
+        public string Name;
+
         public override void Trigger(object os_obj)
         {
             bool isDebug = OS.DEBUG_COMMANDS;
             OS os = (OS)os_obj;
+
+            if(Name == null) { Name = "Autumn"; };
 
             if (isDebug)
             {
