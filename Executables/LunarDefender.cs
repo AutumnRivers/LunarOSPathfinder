@@ -103,12 +103,5 @@ namespace LunarOSPathfinder.Executables
                 }
             }
         }
-
-        public override void Update(float t)
-        {
-            this.bounds.Width = os.ram.bounds.Width;
-
-            base.Update(t);
-        }
     }
 }
