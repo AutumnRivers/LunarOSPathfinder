@@ -44,7 +44,8 @@ namespace LunarOSPathfinder.Executables
         private int fillHeightMarker = 0;
         private int finalFillHeight = 0;
 
-        private float fillOpacity = 0.1f;
+        private float fillOpacity = 0.5f;
+        private float fillFade = 1.0f;
 
         private bool active = false;
 
@@ -94,11 +95,10 @@ namespace LunarOSPathfinder.Executables
             } else
             {
                 active = true;
-
-                Programs.getComputer(os, targetIP).hostileActionTaken();
-
                 os.terminal.writeLine("*() LunarEclipse :: Block Out The Moonshine! ()*");
             }
+
+            Programs.getComputer(os, targetIP).hostileActionTaken();
 
             fillWidthMarker = (int)Math.Ceiling(bounds.Width / 1.75f);
             fillHeightMarker = (int)Math.Ceiling(bounds.Height / 1.75f);
@@ -129,6 +129,7 @@ namespace LunarOSPathfinder.Executables
                 realFillWidth = (int)finalFillWidth;
                 msg = "E    C   L  I P  S   E    D";
                 endCooldown -= (float)Math.Ceiling(MathHelper.SmoothStep(0.0f, 1.0f, t));
+                fillFade -= (float)Math.Ceiling(MathHelper.SmoothStep(0.0f, 1.0f, t)) / 1000;
             };
 
             if(realFillHeight >= finalFillHeight) { realFillHeight = (int)finalFillHeight; };
@@ -152,7 +153,7 @@ namespace LunarOSPathfinder.Executables
             moonRect.Y = bounds.Y + bounds.Height / 2 - (int)(moonRect.Height / 2.0f);
             moonRect.X = (tmpRect.X + bounds.Width / 2) - (moonRect.Width / 2);
 
-            fillOpacity = (float)random.NextDouble() * (0.5f - 0.1f) + 0.1f;
+            if (realFillWidth >= fillWidthMarker) { fillOpacity = (float)random.NextDouble() * (0.5f - 0.35f) + 0.35f; };
 
             Color finalFillColor = isRed ? Color.Lerp(Color.Red, Color.Orange, t) : Color.Lerp(Color.Orange, Color.Red, t);
 
@@ -166,7 +167,7 @@ namespace LunarOSPathfinder.Executables
                 isRed = false;
             }
 
-            GuiData.spriteBatch.Draw(filled, innerMoonRect, fillColor * fillOpacity);
+            GuiData.spriteBatch.Draw(filled, innerMoonRect, fillColor * (fillOpacity * fillFade));
             GuiData.spriteBatch.Draw(outline, moonRect, Color.White * 0.3f);
 
             float textOpacity = (float)random.NextDouble() * (1.0f - 0.4f) + 0.4f;

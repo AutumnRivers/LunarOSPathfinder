@@ -92,6 +92,7 @@ namespace LunarOSPathfinder
             Console.WriteLine("[LunarOSv3] Registering Ports");
             PortManager.RegisterPort("moonshine", "Moonshine Services", 3653); // Moonshine Services for LunarOS
             PortManager.RegisterPort("lunardefender", "LunarDefender", 7600); // LunarDefender
+            PortManager.RegisterPort("projectpf", "Pathfinder Services", 1961); // Project Pathfinder Services
 
             // Daemons
             Console.WriteLine("[LunarOSv3] Registering Daemons");
@@ -103,10 +104,11 @@ namespace LunarOSPathfinder
             ActionManager.RegisterAction<CheckForDebug>("DebugCheck");
             ActionManager.RegisterAction<Actions.LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender");
             ActionManager.RegisterAction<Actions.LunarDefenderActions.KillLunarDefender>("KillLunarDefender");
+            ActionManager.RegisterAction<Actions.WriteToTerminal>("WriteToTerminal");
 
             // Executables
             Console.WriteLine("[LunarOSv3] Registering Executables");
-            ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER#");
+            ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER_DO_NOT_USE_PLEASE_THANKS#");
             ExecutableManager.RegisterExecutable<LunarEclipse>("#LUNAR_ECLIPSE#");
 
             // Launch LunarDefender when extension is loaded

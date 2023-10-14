@@ -32,7 +32,7 @@ A dynamic daemon that refuses to let the player gain administrator access until 
 
 ## Actions
 
-### `<DebugCheck />`
+### `<DebugCheck [Name="string"] />`
 A simple action that checks if the user is in debug mode. Sends a message to the user's terminal when fired and creates a file on their node titled `DebugModeEnabled`.
 
 * `Name="string"` - The name to show in the terminal. If omitted, defaults to "Autumn"
@@ -45,6 +45,9 @@ Launches LunarDefender for the player.
 
 ### `<KillLunarDefender />`
 Kills LunarDefender for the player, and removes the `KeepLDActive` flag if it was applied.
+
+### `<WriteToTerminal [Quietly="bool"]>Message</WriteToTerminal>`
+Writes a message to the terminal a la `writel`. Setting `Quietly` to `"false"` will flash the screen when the message is sent.
 
 ---
 
