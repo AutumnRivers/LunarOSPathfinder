@@ -43,7 +43,8 @@ namespace LunarOSPathfinder.Executables
         List<Color> rectColors = new List<Color>();
 
         // PLAYER - Rectangles to darken the screen
-        List<Rectangle> darkenRects = new List<Rectangle>(3);
+        Rectangle darkenRectangle = new Rectangle();
+        float darkenOpacity = 0.0f;
 
         // Message to show in middle of module
         string msg = "";
@@ -58,12 +59,35 @@ namespace LunarOSPathfinder.Executables
 
         readonly string[] angles = { "up", "right", "down", "left" };
 
+        public override void OnInitialize()
+        {
+            base.OnInitialize();
+
+            var scrn = GuiData.spriteBatch.GraphicsDevice;
+
+            darkenRectangle = new Rectangle()
+            {
+                X = scrn.Viewport.X,
+                Y = scrn.Viewport.Y,
+                Width = scrn.Viewport.Width,
+                Height = scrn.Viewport.Height
+            };
+
+            os.Flags.AddFlag("LaunchedArmstrong");
+        }
+
         public override void Draw(float t)
         {
             base.Draw(t);
 
             drawTarget();
             drawOutline();
+
+            if(connected && !completed) { darkenOpacity = MathHelper.Lerp(darkenOpacity, 1.0f - intervalDefault / 500.0f, t); };
+
+            if(completed) { darkenOpacity = MathHelper.Lerp(darkenOpacity, 0.0f, t); };
+
+            RenderedRectangle.doRectangle(darkenRectangle.X, darkenRectangle.Y, darkenRectangle.Width, darkenRectangle.Height, Color.Black * darkenOpacity);
 
             crosshairPos.Add(new Vector2(bounds.Center.X, bounds.Center.Y));
                 
@@ -178,7 +202,7 @@ namespace LunarOSPathfinder.Executables
 
                     rectHeight += 1.5f * t;
 
-                    float rectOpacity = rectOpTime / 7.5f;
+                    float rectOpacity = rectOpTime / 7.0f;
 
                     if (rectOpacity >= 0.8f || rectHeight >= 3.5f) { raiseRectOpacity = false; }
 
@@ -231,11 +255,6 @@ namespace LunarOSPathfinder.Executables
         private bool msgSent = false;
         private bool connectMsgSent = false;
 
-        public override void OnInitialize()
-        {
-            base.OnInitialize();
-        }
-
         public override void Update(float t)
         {
             base.Update(t);
@@ -277,6 +296,9 @@ namespace LunarOSPathfinder.Executables
 
                 os.warningFlash();
                 os.beepSound.Play();
+
+                os.Flags.AddFlag("LDOffline");
+                os.Flags.RemoveFlag("LaunchedArmstrong");
 
                 this.CanBeKilled = true;
 
