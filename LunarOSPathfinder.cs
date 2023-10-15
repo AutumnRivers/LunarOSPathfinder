@@ -7,10 +7,13 @@ using System.Reflection;
 
 using Pathfinder;
 using Pathfinder.Port;
+using Pathfinder.Event;
 using Pathfinder.Daemon;
 using Pathfinder.Executable;
 using Pathfinder.Command;
 using Pathfinder.Action;
+
+using Pathfinder.Event.Gameplay;
 
 using Hacknet;
 
@@ -25,7 +28,6 @@ using Hacknet.Extensions;
 using System.IO;
 using Microsoft.Xna.Framework.Graphics;
 using Pathfinder.Util;
-using Pathfinder.Event;
 using Pathfinder.Event.Loading;
 
 namespace LunarOSPathfinder
@@ -41,6 +43,10 @@ namespace LunarOSPathfinder
         private Texture2D lunarOSLogo;
         private Texture2D eclipseOutline;
         private Texture2D eclipseFill;
+
+        public static List<LunarDefenderComp> ldComps = new List<LunarDefenderComp>();
+
+        Random random = new Random();
 
         public override bool Load()
         {
@@ -110,11 +116,15 @@ namespace LunarOSPathfinder
             Console.WriteLine("[LunarOSv3] Registering Executables");
             ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER_DO_NOT_USE_PLEASE_THANKS#");
             ExecutableManager.RegisterExecutable<LunarEclipse>("#LUNAR_ECLIPSE#");
+            ExecutableManager.RegisterExecutable<Armstrong>("#ARMSTRONG_EXE#");
+            ExecutableManager.RegisterExecutable<ArmstrongPlayer>("#ARMSTRONG_PLAYER_EXE#");
 
             // Launch LunarDefender when extension is loaded
             Action<OSLoadedEvent> lunarDefenderDelegate = CheckForDefender;
+            Action<OSUpdateEvent> ldRebootDelegate = LDRebootCheck;
 
             EventManager<OSLoadedEvent>.AddHandler(lunarDefenderDelegate);
+            EventManager<OSUpdateEvent>.AddHandler(ldRebootDelegate);
 
             return true;
         }
@@ -130,6 +140,36 @@ namespace LunarOSPathfinder
                 ldExe.bounds.Width = os.ram.bounds.Width;
                 os.AddGameExecutable(ldExe);
             }
+        }
+
+        public void LDRebootCheck(OSUpdateEvent os_update)
+        {
+            OS os = os_update.OS;
+
+            /*if(os.thisComputer.isPortOpen(7600) && !ldComps.Exists(x => x.comp == os.thisComputer)) {
+                LunarDefenderComp currentComp = new LunarDefenderComp()
+                {
+                    comp = os.thisComputer,
+                    rebootTimer = 10.0f
+                };
+            }*/
+        }
+
+        public class LunarDefenderComp
+        {
+            public Computer comp { get; set; }
+            public float rebootTimer { get; set; }
+        }
+
+        public void AddLDComp(Computer targetComp)
+        {
+            LunarDefenderComp currentComp = new LunarDefenderComp()
+            {
+                comp = targetComp,
+                rebootTimer = 10.0f
+            };
+
+            ldComps.Add(currentComp);
         }
     }
 

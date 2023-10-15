@@ -82,6 +82,8 @@
   <ItemGroup>
     <Compile Include="Actions\LunarDefenderActions.cs" />
     <Compile Include="Actions\WriteToTerminal.cs" />
+    <Compile Include="Executables\ArmstrongPlayer.cs" />
+    <Compile Include="Executables\Armstrong.cs" />
     <Compile Include="Executables\LunarEclipse.cs" />
     <Compile Include="LunarOSPathfinder.cs" />
     <Compile Include="Daemons\LunarOSDaemon.cs" />
