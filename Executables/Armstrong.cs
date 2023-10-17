@@ -51,7 +51,10 @@ namespace LunarOSPathfinder.Executables
         private bool connected = false;
         private bool completed = false;
 
+        private bool isLunarOS = false;
+
         readonly string[] angles = { "up", "right", "down", "left" };
+        private readonly Random random = new Random();
 
         public override void OnInitialize()
         {
@@ -69,6 +72,11 @@ namespace LunarOSPathfinder.Executables
                 os.terminal.writeLine("(( Armstrong ; Release Candidate 1.0 ))");
                 os.terminal.writeLine("(( ONE SMALL PROGRAM ; ONE GIANT VULNERABILITY ))");
             }
+
+            // LunarOS devices have Moonshine Services alongside LunarDefender. Non-LunarOS devices do not have Moonshine Services, but can have LunarDefender.
+            // Think of it like Microsoft Defender. That can be ran on any device, but other proprietary Microsoft tech can *only* be ran on Windows.
+            // The same rings true for Moonshine and LunarOS!
+            isLunarOS = Programs.getComputer(os, targetIP).GetAllPortStates().Exists(p => p.PortNumber == 3653);
         }
 
         public override void Draw(float t)
@@ -229,7 +237,7 @@ namespace LunarOSPathfinder.Executables
 
                     float finalOpacity = 1.0f;
 
-                    if(completed) { finalOpacity = 1.0f - ((total - 34.0f) / 3.0f); }
+                    if(completed) { finalOpacity = 1.0f - ((total - 30.0f) / 3.0f); }
 
                     RenderedRectangle.doRectangle(bounds.X, realRectYPos, bounds.Width, realRectHeight, rectColor * rectOpacity * finalOpacity);
                 }
@@ -271,20 +279,23 @@ namespace LunarOSPathfinder.Executables
                 }
             }
 
-            if (total >= 34.0f && !msgSent)
+            if (total >= 30.0f && !msgSent)
             {
                 var targetComp = Programs.getComputer(os, targetIP);
 
                 targetComp.RemovePort("lunardefender");
                 targetComp.portsNeededForCrack--;
 
-                LunarOSMod.LunarDefenderComp currentComp = new LunarOSMod.LunarDefenderComp()
+                if(isLunarOS)
                 {
-                    comp = targetComp,
-                    rebootTimer = 10.0f
-                };
+                    LunarOSMod.LunarDefenderComp currentComp = new LunarOSMod.LunarDefenderComp()
+                    {
+                        comp = targetComp,
+                        rebootTimer = (float)random.Next(25, 35)
+                    };
 
-                LunarOSMod.ldComps.Add(currentComp);
+                    LunarOSMod.ldComps.Add(currentComp);
+                }
 
                 msgSent = true;
                 completed = true;
@@ -298,7 +309,7 @@ namespace LunarOSPathfinder.Executables
                 os.terminal.writeLine("(( <3 - Leon , Sakura , Lorelle , Benjamin ))");
             }
 
-            if (total >= 37.5f)
+            if (total >= 33.5f)
             {
                 this.isExiting = true;
             }

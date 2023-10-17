@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.IO;
 
 using Pathfinder;
 using Pathfinder.Port;
@@ -12,10 +14,15 @@ using Pathfinder.Daemon;
 using Pathfinder.Executable;
 using Pathfinder.Command;
 using Pathfinder.Action;
+using Pathfinder.Util;
 
 using Pathfinder.Event.Gameplay;
+using Pathfinder.Event.Saving;
+using Pathfinder.Event.Loading;
+using Pathfinder.Util.XML;
 
 using Hacknet;
+using Hacknet.Extensions;
 
 using BepInEx;
 using BepInEx.Hacknet;
@@ -24,11 +31,8 @@ using HarmonyLib;
 using LunarOSPathfinder.Daemons;
 using LunarOSPathfinder.Executables;
 
-using Hacknet.Extensions;
-using System.IO;
 using Microsoft.Xna.Framework.Graphics;
-using Pathfinder.Util;
-using Pathfinder.Event.Loading;
+using Microsoft.Xna.Framework;
 
 namespace LunarOSPathfinder
 {
@@ -46,7 +50,7 @@ namespace LunarOSPathfinder
 
         public static List<LunarDefenderComp> ldComps = new List<LunarDefenderComp>();
 
-        Random random = new Random();
+        private readonly Random random = new Random();
 
         public override bool Load()
         {
@@ -107,24 +111,28 @@ namespace LunarOSPathfinder
 
             // Actions
             Console.WriteLine("[LunarOSv3] Registering Actions");
-            ActionManager.RegisterAction<CheckForDebug>("DebugCheck");
-            ActionManager.RegisterAction<Actions.LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender");
-            ActionManager.RegisterAction<Actions.LunarDefenderActions.KillLunarDefender>("KillLunarDefender");
-            ActionManager.RegisterAction<Actions.WriteToTerminal>("WriteToTerminal");
+            ActionManager.RegisterAction<CheckForDebug>("DebugCheck"); // Check for debug mode
+            ActionManager.RegisterAction<Actions.LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender"); // Launch LunarDefender for the player
+            ActionManager.RegisterAction<Actions.LunarDefenderActions.KillLunarDefender>("KillLunarDefender"); // Kill LunarDefender for the player
+            ActionManager.RegisterAction<Actions.WriteToTerminal>("WriteToTerminal"); // Write to the terminal a la `writel`
 
             // Executables
             Console.WriteLine("[LunarOSv3] Registering Executables");
-            ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER_DO_NOT_USE_PLEASE_THANKS#");
-            ExecutableManager.RegisterExecutable<LunarEclipse>("#LUNAR_ECLIPSE#");
-            ExecutableManager.RegisterExecutable<Armstrong>("#ARMSTRONG_EXE#");
-            ExecutableManager.RegisterExecutable<ArmstrongPlayer>("#ARMSTRONG_PLAYER_EXE#");
+            ExecutableManager.RegisterExecutable<LunarDefender>("#LUNARDEFENDER_DO_NOT_USE_PLEASE_THANKS#"); // LunarDefender executable, need to register this, wish I didn't
+            ExecutableManager.RegisterExecutable<LunarEclipse>("#LUNAR_ECLIPSE#"); // LunarEclipse - 3653
+            ExecutableManager.RegisterExecutable<Armstrong>("#ARMSTRONG_EXE#"); // Armstrong - 7600 (Static)
+            ExecutableManager.RegisterExecutable<ArmstrongPlayer>("#ARMSTRONG_PLAYER_EXE#"); // Same as above, but with fancy animation and flag setting
 
             // Launch LunarDefender when extension is loaded
-            Action<OSLoadedEvent> lunarDefenderDelegate = CheckForDefender;
-            Action<OSUpdateEvent> ldRebootDelegate = LDRebootCheck;
+            Action<OSLoadedEvent> lunarDefenderDelegate = CheckForDefender; // Check for a flag and launch LunarDefender on extension load
+            Action<SaveComputerEvent> modifyLunarDefenderNodes = ModifyLDNodes; // Check if a computer needs to be registered as a "LunarDefender Node"
+            Action<SaveComputerLoadedEvent> checkLDComps = CheckForLDComps;
+            Action<OSUpdateEvent> checkRebootLDNodes = CheckAndRebootLDComps;
 
             EventManager<OSLoadedEvent>.AddHandler(lunarDefenderDelegate);
-            EventManager<OSUpdateEvent>.AddHandler(ldRebootDelegate);
+            EventManager<SaveComputerEvent>.AddHandler(modifyLunarDefenderNodes);
+            EventManager<SaveComputerLoadedEvent>.AddHandler(checkLDComps);
+            EventManager<OSUpdateEvent>.AddHandler(checkRebootLDNodes);
 
             return true;
         }
@@ -142,17 +150,56 @@ namespace LunarOSPathfinder
             }
         }
 
-        public void LDRebootCheck(OSUpdateEvent os_update)
+        public void CheckAndRebootLDComps(OSUpdateEvent os_event)
         {
-            OS os = os_update.OS;
+            GameTime gt = os_event.GameTime;
+            float subtractBy = (float)(gt.ElapsedGameTime.TotalMilliseconds / 1000);
 
-            /*if(os.thisComputer.isPortOpen(7600) && !ldComps.Exists(x => x.comp == os.thisComputer)) {
-                LunarDefenderComp currentComp = new LunarDefenderComp()
+            if(ldComps.Count() > 0)
+            {
+                for(int index = 0; index < ldComps.Count(); index++)
                 {
-                    comp = os.thisComputer,
-                    rebootTimer = 10.0f
+                    LunarDefenderComp currentComp = ldComps.ElementAt(index);
+
+                    currentComp.rebootTimer -= subtractBy;
+
+                    if(currentComp.rebootTimer <= 0) { RebootAndResetNodes(currentComp); }
+                    else { ldComps[index] = currentComp; }
+                }
+            }
+        }
+
+        public void CheckForLDComps(SaveComputerLoadedEvent scl_event)
+        {
+            ElementInfo xCompElem = scl_event.Info;
+
+            if(xCompElem.Attributes.ContainsKey("timeUntilReset"))
+            {
+                float timeUntilReset = float.Parse(xCompElem.Attributes["timeUntilReset"]);
+
+                LunarDefenderComp newLDComp = new LunarDefenderComp()
+                {
+                    comp = scl_event.Comp,
+                    rebootTimer = timeUntilReset
                 };
-            }*/
+
+                ldComps.Add(newLDComp);
+            }
+        }
+
+        public void ModifyLDNodes(SaveComputerEvent save_comp_event)
+        {
+            Computer comp = save_comp_event.Comp;
+            XElement xCompElem = save_comp_event.Element;
+
+            if(ldComps.Exists(ldc => ldc.comp.idName == comp.idName))
+            {
+                var ldComp = ldComps.First(ldc => ldc.comp.idName == comp.idName);
+
+                xCompElem.Add(new XAttribute("timeUntilReset", (int)Math.Ceiling(ldComp.rebootTimer)));
+
+                save_comp_event.Element = xCompElem;
+            }
         }
 
         public class LunarDefenderComp
@@ -161,15 +208,49 @@ namespace LunarOSPathfinder
             public float rebootTimer { get; set; }
         }
 
+        public void RebootAndResetNodes(LunarDefenderComp currentLDComp)
+        {
+            Computer currentComp = currentLDComp.comp;
+
+            currentComp.AddPort(PortManager.GetPortRecordFromProtocol("lunardefender"));
+            currentComp.portsNeededForCrack++;
+
+            foreach(var port in currentComp.GetAllPortStates())
+            {
+                currentComp.closePort(port.PortNumber, "MOONSHINE_SERVICES");
+            }
+
+            currentComp.proxyActive = true;
+            currentComp.proxyOverloadTicks = currentComp.startingOverloadTicks;
+            currentComp.firewall.solved = false;
+            currentComp.firewall.resetSolutionProgress();
+            currentComp.adminIP = currentComp.ip;
+
+            currentComp.setAdminPassword(RandomString(7));
+
+            ldComps.Remove(currentLDComp);
+
+            currentComp.log("LUNAR_DEFENDER_REBOOT_TRIGGERED");
+
+            currentComp.reboot("MOONSHINE_SERVICES");
+        }
+
         public void AddLDComp(Computer targetComp)
         {
             LunarDefenderComp currentComp = new LunarDefenderComp()
             {
                 comp = targetComp,
-                rebootTimer = 10.0f
+                rebootTimer = (float)random.Next(25, 35)
             };
 
             ldComps.Add(currentComp);
+        }
+
+        public string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; // Alphanumeric
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 
