@@ -185,14 +185,11 @@ namespace LunarOSPathfinder.Executables
 
             total += t;
 
-            if(total >= 17.0f)
+            if(total >= 17.0f && !msgSent)
             {
                 Programs.getComputer(os, targetIP).openPort(3653, os.thisComputer.ip);
-                if(!msgSent)
-                {
-                    msgSent = true;
-                    os.terminal.writeLine("*() LunarEclipse :: SUCCESS :: ECLIPSED ()*");
-                }
+                msgSent = true;
+                os.terminal.writeLine("*() LunarEclipse :: SUCCESS :: ECLIPSED ()*");
             }
 
             if(total >= 25.0f)
