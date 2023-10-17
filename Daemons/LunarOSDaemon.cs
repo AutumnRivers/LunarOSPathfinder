@@ -69,13 +69,23 @@ namespace LunarOSPathfinder.Daemons
             logoRect.Width = 325;
             logoRect.Height = 325;
 
-            GuiData.spriteBatch.Draw(logo, logoRect, Color.White * 0.3f); // Draw Logo
+            GuiData.spriteBatch.Draw(logo, logoRect, Color.White * 0.25f); // Draw Logo
 
             GuiData.spriteBatch.DrawString(GuiData.smallfont, "This machine protected with Moonshine(TM) Technologies Software.\nhttps://moonshine.tech/lunardefender", new Vector2(bounds.X + 175, bounds.Y + 38), Color.CornflowerBlue);
 
-            TextItem.doLabel(new Vector2(center.X + titleXOffset, center.Y + titleYOffset), "LunarOS v" + Version, Color.Aquamarine); // Draw LunarOS version
+            //TextItem.doLabel(new Vector2(center.X + titleXOffset, center.Y + titleYOffset), "LunarOS v" + Version, Color.Aquamarine); // Draw LunarOS version
 
-            if(Subtitle != null) { TextItem.doLabel(new Vector2(center.X + subXOffset, center.Y + subYOffset), Subtitle, Color.White); } // Draw (optional) subtitle
+            Vector2 vector = GuiData.font.MeasureString(LocaleTerms.Loc("LunarOS v" + Version));
+            Vector2 position = new Vector2((float)(bounds.X + bounds.Width / 2) - vector.X / 2f, (float)(bounds.Y + bounds.Height / 2 - 10) - 20f);
+            GuiData.spriteBatch.DrawString(GuiData.font, LocaleTerms.Loc("LunarOS v" + Version), position, Color.Aquamarine);
+
+            if (Subtitle != null) {
+                //TextItem.doLabel(new Vector2(center.X + subXOffset, center.Y + subYOffset), Subtitle, Color.White);
+
+                Vector2 subVector = GuiData.font.MeasureString(LocaleTerms.Loc(Subtitle));
+                Vector2 subPosition = new Vector2((float)(bounds.X + bounds.Width / 2) - subVector.X / 2f, (float)(bounds.Y + bounds.Height / 2 - 10) + 15f);
+                GuiData.spriteBatch.DrawString(GuiData.font, LocaleTerms.Loc(Subtitle), subPosition, Color.White);
+            } // Draw (optional) subtitle
 
             bool backButton = false;
 
