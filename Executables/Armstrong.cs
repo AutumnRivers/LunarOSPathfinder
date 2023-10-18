@@ -286,7 +286,7 @@ namespace LunarOSPathfinder.Executables
                 targetComp.RemovePort("lunardefender");
                 targetComp.portsNeededForCrack--;
 
-                if(isLunarOS)
+                if(isLunarOS && targetComp.idName != "sequencerNode")
                 {
                     LunarOSMod.LunarDefenderComp currentComp = new LunarOSMod.LunarDefenderComp()
                     {
