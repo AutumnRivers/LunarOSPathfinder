@@ -67,9 +67,8 @@ namespace LunarOSPathfinder
 
             ExtensionInfo extinfo = ExtensionLoader.ActiveExtensionInfo;
             string extensionFolder = extinfo.FolderPath;
-            string hacknetFolder = "./";
 
-            string fullExtensionPath = hacknetFolder + extensionFolder;
+            string fullExtensionPath = extensionFolder;
 
             GraphicsDevice userGraphics = GuiData.spriteBatch.GraphicsDevice;
 
@@ -161,6 +160,8 @@ namespace LunarOSPathfinder
                 {
                     LunarDefenderComp currentComp = ldComps.ElementAt(index);
 
+                    if(currentComp == null) { continue; }
+
                     currentComp.rebootTimer -= subtractBy;
 
                     if(currentComp.rebootTimer <= 0) { RebootAndResetNodes(currentComp); }
@@ -212,6 +213,8 @@ namespace LunarOSPathfinder
         {
             Computer currentComp = currentLDComp.comp;
 
+            Log.LogDebug("Rebooting LD Node: " + currentComp.idName);
+
             currentComp.AddPort(PortManager.GetPortRecordFromProtocol("lunardefender"));
             currentComp.portsNeededForCrack++;
 
@@ -220,19 +223,39 @@ namespace LunarOSPathfinder
                 currentComp.closePort(port.PortNumber, "MOONSHINE_SERVICES");
             }
 
-            currentComp.proxyActive = true;
-            currentComp.proxyOverloadTicks = currentComp.startingOverloadTicks;
-            currentComp.firewall.solved = false;
-            currentComp.firewall.resetSolutionProgress();
+            Log.LogDebug("[LDNode:" + currentComp.idName + "] Ports Reset");
+
+            if (currentComp.hasProxy)
+            {
+                currentComp.proxyActive = true;
+                currentComp.proxyOverloadTicks = currentComp.startingOverloadTicks;
+
+                Log.LogDebug("[LDNode:" + currentComp.idName + "] Proxy Reset");
+            }
+
+            if (currentComp.firewall != null)
+            {
+                currentComp.firewall.solved = false;
+                currentComp.firewall.resetSolutionProgress();
+
+                Log.LogDebug("[LDNode:" + currentComp.idName + "] Firewall Reset");
+            }
+
             currentComp.adminIP = currentComp.ip;
 
             currentComp.setAdminPassword(RandomString(7));
 
+            Log.LogDebug("[LDNode:" + currentComp.idName + "] Admin Reset");
+
             ldComps.Remove(currentLDComp);
+
+            Log.LogDebug("[LDNode:" + currentComp.idName + "] Removed From Array");
 
             currentComp.log("LUNAR_DEFENDER_REBOOT_TRIGGERED");
 
             currentComp.reboot("MOONSHINE_SERVICES");
+
+            Log.LogDebug("[LDNode:" + currentComp.idName + "] Rebooted...");
         }
 
         public void AddLDComp(Computer targetComp)
