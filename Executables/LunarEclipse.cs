@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Pathfinder.Executable;
 using Pathfinder.Util;
+using Pathfinder.Port;
 
 using Hacknet;
 using Hacknet.UIUtils;
@@ -57,6 +58,8 @@ namespace LunarOSPathfinder.Executables
         {
             base.OnInitialize();
 
+            Computer targetComp = Programs.getComputer(os, targetIP);
+
             int originPort = 3653;
             int displayPort = Programs.getComputer(os, targetIP).GetDisplayPortNumberFromCodePort(originPort);
 
@@ -71,12 +74,21 @@ namespace LunarOSPathfinder.Executables
                 os.write("No Port Number Provided");
                 os.write("Execution Failed");
                 needsRemoval = true;
-            } else if(!Args.Contains(displayPort.ToString()))
+            } else if (!int.TryParse(Args[1], out _)) {
+                os.write("First Argument Must Be A Port Number");
+                os.write("Execution Failed");
+                needsRemoval = true;
+            } else if (!targetComp.GetAllPortStates().Exists(p => p.PortNumber == int.Parse(Args[1])))
             {
                 os.write("Target Port is Closed");
                 os.write("Execution Failed");
                 needsRemoval = true;
-            } else if((!Args.Contains("-s") && !Args.Contains("-r"))
+            } else if (targetComp.GetAllPortStates().Find(p => p.PortNumber == int.Parse(Args[1])).Record.Protocol != "moonshine")
+            {
+                os.write("Target Port running incompatible service for this executable");
+                os.write("Execution Failed");
+                needsRemoval = true;
+            } else if ((!Args.Contains("-s") && !Args.Contains("-r"))
                 || (Args.Contains("-s") && !Args.Contains(sshPort.ToString()))
                 || (Args.Contains("-r") && !Args.Contains(rtspPort.ToString()))
             )
