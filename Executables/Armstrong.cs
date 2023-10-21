@@ -62,7 +62,7 @@ namespace LunarOSPathfinder.Executables
 
             int ldPort = Programs.getComputer(os, targetIP).GetDisplayPortNumberFromCodePort(7600);
 
-            if (!Programs.getComputer(os, targetIP).GetAllPortStates().Exists(p => p.PortNumber == 7600))
+            if (!Programs.getComputer(os, targetIP).GetAllPortStates().Exists(p => p.Record == PortManager.GetPortRecordFromProtocol("lunardefender")))
             {
                 this.needsRemoval = true;
                 os.terminal.writeLine("(( Armstrong needs LunarDefender to be running on the target system. ))");

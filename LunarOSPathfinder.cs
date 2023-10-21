@@ -14,7 +14,7 @@ using Pathfinder.Daemon;
 using Pathfinder.Executable;
 using Pathfinder.Command;
 using Pathfinder.Action;
-using Pathfinder.Util;
+using Pathfinder.Meta;
 
 using Pathfinder.Event.Gameplay;
 using Pathfinder.Event.Saving;
@@ -28,21 +28,24 @@ using BepInEx;
 using BepInEx.Hacknet;
 using HarmonyLib;
 
+using LunarOSPathfinder.Actions;
+using LunarOSPathfinder.Commands;
 using LunarOSPathfinder.Daemons;
 using LunarOSPathfinder.Executables;
+using LunarOSPathfinder.Patches;
 
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace LunarOSPathfinder
 {
-
     [BepInPlugin(ModGUID, ModName, ModVer)]
+    [BepInDependency("kr.o_r.prodzpod.zerodaytoolkit")]
     public class LunarOSMod : HacknetPlugin
     {
         public const string ModGUID = "autumnrivers.lunarospf";
         public const string ModName = "LunarOSv3";
-        public const string ModVer = "0.1.0";
+        public const string ModVer = "1.1.0";
 
         private Texture2D lunarOSLogo;
         private Texture2D eclipseOutline;
@@ -54,16 +57,7 @@ namespace LunarOSPathfinder
 
         public override bool Load()
         {
-            var i = 0;
-            foreach (var type in Assembly.GetExecutingAssembly().DefinedTypes)
-            {
-                i++;
-                if (type.GetCustomAttribute(typeof(HarmonyPatch)) != null)
-                {
-                    Log.LogDebug("Patching " + type);
-                    HarmonyInstance.PatchAll(type);
-                }
-            }
+            HarmonyInstance.PatchAll(typeof(LunarOSMod).Assembly);
 
             ExtensionInfo extinfo = ExtensionLoader.ActiveExtensionInfo;
             string extensionFolder = extinfo.FolderPath;
@@ -111,9 +105,9 @@ namespace LunarOSPathfinder
             // Actions
             Console.WriteLine("[LunarOSv3] Registering Actions");
             ActionManager.RegisterAction<CheckForDebug>("DebugCheck"); // Check for debug mode
-            ActionManager.RegisterAction<Actions.LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender"); // Launch LunarDefender for the player
-            ActionManager.RegisterAction<Actions.LunarDefenderActions.KillLunarDefender>("KillLunarDefender"); // Kill LunarDefender for the player
-            ActionManager.RegisterAction<Actions.WriteToTerminal>("WriteToTerminal"); // Write to the terminal a la `writel`
+            ActionManager.RegisterAction<LunarDefenderActions.LaunchLunarDefender>("LaunchLunarDefender"); // Launch LunarDefender for the player
+            ActionManager.RegisterAction<LunarDefenderActions.KillLunarDefender>("KillLunarDefender"); // Kill LunarDefender for the player
+            ActionManager.RegisterAction<WriteToTerminal>("WriteToTerminal"); // Write to the terminal a la `writel`
 
             // Executables
             Console.WriteLine("[LunarOSv3] Registering Executables");
@@ -121,6 +115,12 @@ namespace LunarOSPathfinder
             ExecutableManager.RegisterExecutable<LunarEclipse>("#LUNAR_ECLIPSE#"); // LunarEclipse - 3653
             ExecutableManager.RegisterExecutable<Armstrong>("#ARMSTRONG_EXE#"); // Armstrong - 7600 (Static)
             ExecutableManager.RegisterExecutable<ArmstrongPlayer>("#ARMSTRONG_PLAYER_EXE#"); // Same as above, but with fancy animation and flag setting
+
+            // Commands
+            Console.WriteLine("[LunarOSv3] Registering Debug Commands");
+            CommandManager.RegisterCommand("turbokill", Killers.TurboKiller, false, false);
+            CommandManager.RegisterCommand("plskilllunardefenderthankyouforever", Killers.LDKiller, true, true);
+            CommandManager.RegisterCommand("godiwishihadmorefuckingram", Killers.PlayerLDKiller, false, false);
 
             // Launch LunarDefender when extension is loaded
             Action<OSLoadedEvent> lunarDefenderDelegate = CheckForDefender; // Check for a flag and launch LunarDefender on extension load
@@ -132,6 +132,8 @@ namespace LunarOSPathfinder
             EventManager<SaveComputerEvent>.AddHandler(modifyLunarDefenderNodes);
             EventManager<SaveComputerLoadedEvent>.AddHandler(checkLDComps);
             EventManager<OSUpdateEvent>.AddHandler(checkRebootLDNodes);
+
+            Log.LogDebug("[LunarOSv3] Events Loaded");
 
             return true;
         }
@@ -274,31 +276,6 @@ namespace LunarOSPathfinder
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"; // Alphanumeric
             return new string(Enumerable.Repeat(chars, length)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-    }
-
-    public class CheckForDebug : PathfinderAction
-    {
-        [XMLStorage]
-        public string Name;
-
-        public override void Trigger(object os_obj)
-        {
-            bool isDebug = OS.DEBUG_COMMANDS;
-            OS os = (OS)os_obj;
-
-            if(Name == null) { Name = "Autumn"; };
-
-            if (isDebug)
-            {
-                os.terminal.writeLine(" ");
-                os.terminal.writeLine("Autumn:Howdy pardner! Looks like you got dat dere debug mode enabled.");
-                os.terminal.writeLine("Aw, shucks, I'll let you pass this time.");
-                os.terminal.writeLine("But don't do nothing that might break my good ol' extension, alright?");
-                os.terminal.writeLine(" ");
-
-                os.thisComputer.makeFile(os.thisComputer.ip, "DebugModeEnabled", "Do not delete this file, thanks :)", os.thisComputer.getFolderPath("home"));
-            }
         }
     }
 }

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LunarOSPathfinder</RootNamespace>
     <AssemblyName>LunarOSPathfinder</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -78,10 +78,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="ZeroDayToolKit">
+      <HintPath>M:\SteamLibrary\steamapps\common\Hacknet\Extensions\PlanObso\Plugins\ZeroDayToolKit.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actions\CheckForDebug.cs" />
     <Compile Include="Actions\LunarDefenderActions.cs" />
     <Compile Include="Actions\WriteToTerminal.cs" />
+    <Compile Include="Commands\Killers.cs" />
     <Compile Include="Executables\ArmstrongPlayer.cs" />
     <Compile Include="Executables\Armstrong.cs" />
     <Compile Include="Executables\LunarEclipse.cs" />
@@ -89,6 +94,8 @@
     <Compile Include="Daemons\LunarOSDaemon.cs" />
     <Compile Include="Daemons\VaultDaemon.cs" />
     <Compile Include="Executables\LunarDefender.cs" />
+    <Compile Include="Patches\LunarDefender_Reboot.cs" />
+    <Compile Include="Patches\PortBackdoor_LunarOS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
