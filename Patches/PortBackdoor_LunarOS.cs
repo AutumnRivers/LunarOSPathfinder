@@ -23,7 +23,7 @@ namespace LunarOSPathfinder.Patches
         {
             Computer targetComp = Programs.getComputer(OS.currentInstance, __instance.targetIP);
 
-            if(targetComp.GetAllPortStates().Exists(p => p.Record == PortManager.GetPortRecordFromProtocol("moonshine")))
+            if(targetComp.GetAllPortStates().Exists(p => p.Record == PortManager.GetPortRecordFromProtocol("lunardefender")))
             {
                 OS.currentInstance.terminal.writeLine("LunarOSv2+later patch backdoor vuln - read README for more info");
                 OS.currentInstance.terminal.writeLine("Execution Failed");

@@ -45,7 +45,7 @@ namespace LunarOSPathfinder
     {
         public const string ModGUID = "autumnrivers.lunarospf";
         public const string ModName = "LunarOSv3";
-        public const string ModVer = "1.1.0";
+        public const string ModVer = "1.1.1";
 
         private Texture2D lunarOSLogo;
         private Texture2D eclipseOutline;

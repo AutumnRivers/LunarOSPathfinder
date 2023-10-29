@@ -62,7 +62,7 @@ Writes a message to the terminal a la `writel`. Setting `Quietly` to `"false"` w
 ## Executables
 
 ### `LunarDefender`
-Cannot be launched nor killed by the user. Protects the user from a ForkBomb completing, then has a 10 minute cooldown.
+Cannot be launched nor killed by the user.
 
 ### `LunarEclipse`
 `$ LunarEclipse 3653 [-s 22|-r 554]`   
